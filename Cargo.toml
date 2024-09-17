@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ndarray = "0.15.6"
+nalgebra = "*"
+transpose = "0.2.3"
+matrixmultiply = "0.3.9"
