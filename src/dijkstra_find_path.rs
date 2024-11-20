@@ -28,8 +28,7 @@ impl DijkstraSP {
     }
 
     fn relax(dij: &mut DijkstraSP, graph: &EdgeWeightedDigraph, v: usize){
-        for gr_ref in graph.edge_list(v).iter() {
-            let gr = gr_ref.borrow();
+        for gr in graph.edge_list(v).iter() {
             let w = gr.to() as usize;
             if dij.dist_to[w] > dij.dist_to[v] + gr.get_cost() {
                 dij.dist_to[w] = dij.dist_to[v] + gr.get_cost();

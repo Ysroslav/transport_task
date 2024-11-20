@@ -64,7 +64,7 @@ impl DirectedEdge {
 pub struct EdgeWeightedDigraph {
     v_count: i32,     // количество вершин
     e_count: i32, // количество ребер
-    adj: Option<Vec<Bag<RefCell<DirectedEdge>>>>,// списки смежности
+    adj: Option<Vec<Bag<DirectedEdge>>>,// списки смежности
     matrix: Option<Vec<Vec<f64>>>
 }
 
@@ -98,7 +98,7 @@ impl EdgeWeightedDigraph {
                 cost,
                 capacity: 0f64
             };
-            adj[e.from() as usize].add(RefCell::new(e));
+            adj[e.from() as usize].add(e);
             self.e_count += 1;
         }
         self.adj = Some(adj);
@@ -123,14 +123,14 @@ impl EdgeWeightedDigraph {
                 cost: link.get_cost(),
                 capacity: link.get_capacity()
             };
-            adj[e.from() as usize].add(RefCell::new(e));
+            adj[e.from() as usize].add(e);
             let mut _e = DirectedEdge {
                 v: to,
                 w: from,
                 cost: link.get_cost(),
                 capacity: link.get_capacity()
             };
-            adj[_e.from() as usize].add(RefCell::new(_e));
+            adj[_e.from() as usize].add(_e);
             self.e_count += 1;
         }
         self.adj = Some(adj);
@@ -160,31 +160,32 @@ impl EdgeWeightedDigraph {
         self.e_count
     }
 
-    pub fn edge_list(&self, v:usize) -> &Bag<RefCell<DirectedEdge>> {
+    pub fn edge_list(&self, v:usize) -> &Bag<DirectedEdge> {
         let bag = self.adj.as_ref().unwrap();
         &bag[v]
     }
 
     pub fn update_edge(&mut self, v:i32, w:i32, cost:f64) {
         let bag = self.adj.as_deref_mut().unwrap();
-        let edge = &bag[v as usize].iter_mut()
-            .find(|n| find(v, w, &n.borrow_mut()));
+        let edge = &mut bag[v as usize].iter_mut()
+            .find(|n| find(v, w, **n));
         match edge {
-            Some(e) => e.borrow_mut().cost = cost,
+            Some(ref mut e) => e.cost = cost,
             None => {}
         }
     }
 
-    /*pub fn edge_list_mut(&self, v: usize) -> RefMut<Bag<DirectedEdge>> {
-        let adj_ref = self.adj.as_ref().unwrap().borrow_mut();
-    }*/
+    pub fn edge_list_mut(&mut self, v: usize) -> &mut Bag<DirectedEdge> {
+        let bag = self.adj.as_deref_mut().unwrap();
+        &mut bag[v]
+    }
 
     pub fn get_matrix_connectivity(&self) -> &Vec<Vec<f64>> {
          &self.matrix.as_ref().unwrap()
     }
 }
 
-fn find(v: i32, w:i32, e: &RefMut<DirectedEdge>) -> bool {
+fn find(v: i32, w:i32, e: DirectedEdge) -> bool {
     if e.v == v && e.w == w {
         return true
     }

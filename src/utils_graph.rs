@@ -54,50 +54,53 @@ impl Hash for EdgeCapacityProduct {
     }
 }
 
-pub fn find_all_path(graph: &mut EdgeWeightedDigraph, from: i32, to: i32) -> HashMap<String, Vec<DirectedEdge>> {
+pub fn find_all_path(
+    graph: &EdgeWeightedDigraph,
+    from: i32,
+    to: i32,
+) -> HashMap<String, Vec<DirectedEdge>> {
     let mut paths = HashMap::new();
     let mut current_path = Vec::new();
     let mut visited = HashSet::new();
-    let edge_ref = DirectedEdge::get_empty_edge(from, from);
-    dfs(&edge_ref, to, &mut visited, &mut current_path, &mut paths, graph);
+    let edge =  &mut DirectedEdge::get_empty_edge(from, from);
+    dfs(edge, to, &mut visited, &mut current_path, &mut paths, graph);
     paths
 }
 
-fn dfs(edge: &DirectedEdge,
-       end: i32,
-       visited: &mut HashSet<i32>,
-       current_path: &mut Vec<DirectedEdge>,
-       paths: &mut HashMap<String, Vec<DirectedEdge>>,
-       graph: &EdgeWeightedDigraph) {
-
+fn dfs(
+    edge: &DirectedEdge,
+    end: i32,
+    visited: &mut HashSet<i32>,
+    current_path: &mut Vec<DirectedEdge>,
+    paths: &mut HashMap<String, Vec<DirectedEdge>>,
+    graph: &EdgeWeightedDigraph,
+) {
     let to = edge.to();
 
     visited.insert(to);
-    current_path.push(*edge);
+    current_path.push(edge.clone()); // Push a clone of the current edge
 
     if to == end {
-        paths.insert(vec_to_str(current_path), take(current_path));
+        // Store a copy of the current path
+        paths.insert(vec_to_str(current_path), current_path.clone());
     } else {
-        // Идём по всем соседям
-        let mut edges = graph.edge_list(to as usize);
-        for gr_ref in edges.iter() {
-            if !visited.contains(&gr_ref.borrow().to()) {
-                dfs(gr_ref.borrow().deref(),
-                    end,
-                    visited,
-                    current_path,
-                    paths,
-                    graph
-                );
+        // Iterate over all neighbors
+        let mut edges = &graph.edge_list(to as usize);
+        for gr in edges.iter() {
+            if !visited.contains(&gr.to()) {
+                dfs(gr, end, visited, current_path, paths, graph);
             }
         }
     }
+
+    // Backtrack
     current_path.pop();
     visited.remove(&to);
 }
 
 fn vec_to_str(v: &Vec<DirectedEdge>) -> String {
-    v.iter().map(|n| n.to().to_string())
+    v.iter()
+        .map(|n| n.to().to_string())
         .collect::<Vec<String>>()
         .join("_")
 }
@@ -148,6 +151,10 @@ impl EdgeFlowCommodities {
                 panic!("Продукт не найден")
             }
         }
+    }
+
+    pub fn get_total_flow(&self) -> f64 {
+        self.commodities.values().sum()
     }
 
 }

@@ -63,7 +63,7 @@ fn main() {
     let commodities = p.get_demands().get_demand_vec();
 
 
-    let N = 1000;
+    let N = 10000;
 
     let alpha:f64 = 0.99;
     //определяем граф
@@ -108,20 +108,22 @@ fn main() {
         }
 
         for (_, edge_flows) in edge_commodity.iter_mut() {
+            let cost_total = edge_flows.get_total_flow();
             let mut edge = edge_flows.get_edge_mut();
-            let cost = count_first_derivative(x_0_p, edge.get_capacity());
-            graph_adj.update_edge(edge.to(), edge.from(), cost);
+            let cost = count_first_derivative(cost_total, edge.get_capacity());
+            graph_adj.update_edge(edge.from(), edge.to(), cost);
             edge.update_cost(cost);
         }
 
         // старт расчета
+        for i in 0..N {
         //запуск алгоритма Дейкстры
         let sp = DijkstraSP::dijkstra(graph_adj, *source);
         let key_path_s = &vec_edge_to_str(&sp.path_to(*target as usize).expect("Путь не найден"));
 
         let path_s = paths.get(key_path_s).unwrap().clone();
         //запуск метода проекции
-        for i in 0..N {
+
             let mut result = 0f64;
             let mut map_result = HashMap::new();
             let d_kp_s = get_d_k_p(&r_index, &path_s, &edge_commodity);
@@ -141,7 +143,7 @@ fn main() {
             }
             let x_k_p_s_t = r_k - result;
             map_result.insert(key_path_s.clone(), x_k_p_s_t);
-            edge_commodity = update_edge_flow(&paths, &map_result, r_index);
+            edge_commodity = update_edge_flow(&paths, &map_result, r_index, graph_adj);
         }
     }
     let duration = start.elapsed();
@@ -221,7 +223,9 @@ fn get_derivative_two_edge (commodity: &i32, edge: &DirectedEdge, edges: &HashMa
 fn update_edge_flow (
     paths: &HashMap<String, Vec<DirectedEdge>>,
     result: &HashMap<String, f64>,
-    commodity: i32) -> HashMap<String, EdgeFlowCommodities> {
+    commodity: i32,
+    graph_adj: &mut EdgeWeightedDigraph
+) -> HashMap<String, EdgeFlowCommodities> {
     let mut edge_commodity:HashMap<String, EdgeFlowCommodities > = HashMap::new();
     for (key, path_vec) in paths{
         for mut edge in path_vec {
@@ -243,10 +247,11 @@ fn update_edge_flow (
     }
 
     for (_, edge_flows) in edge_commodity.iter_mut() {
-        let flow = edge_flows.get_total_flow_by_commodity(&commodity);
+        let flow = edge_flows.get_total_flow();
         let mut edge = edge_flows.get_edge_mut();
         let capacity = edge.get_capacity();
         let cost = count_first_derivative(flow, capacity);
+        graph_adj.update_edge(edge.from(), edge.to(), cost);
         edge.update_cost(cost);
     }
     edge_commodity

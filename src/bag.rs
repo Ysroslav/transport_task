@@ -1,18 +1,18 @@
 type Wrapper<T> = Option<Box<Node<T>>>;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Item<T> {
     elem: Wrapper<T>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 #[derive(PartialEq)]
 struct Node<T> {
     item: T,
     next: Wrapper<T>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Bag<T> {
     first: Wrapper<T>,
     n: i32
