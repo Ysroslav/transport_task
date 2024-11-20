@@ -2,6 +2,7 @@ use std::cell::{RefCell, RefMut};
 use std::collections::{HashSet, HashMap};
 use std::hash::{Hash, Hasher};
 use std::mem::take;
+use std::ops::Deref;
 
 use crate::graph::{DirectedEdge, EdgeWeightedDigraph};
 
@@ -53,30 +54,26 @@ impl Hash for EdgeCapacityProduct {
     }
 }
 
-pub fn find_all_path(graph: &mut EdgeWeightedDigraph, from: i32, to: i32) -> HashMap<String, Vec<RefCell<DirectedEdge>>> {
+pub fn find_all_path(graph: &mut EdgeWeightedDigraph, from: i32, to: i32) -> HashMap<String, Vec<DirectedEdge>> {
     let mut paths = HashMap::new();
     let mut current_path = Vec::new();
     let mut visited = HashSet::new();
-    let edge_ref = RefCell::new(DirectedEdge::get_empty_edge(from, from));
-    dfs(edge_ref, to, &mut visited, &mut current_path, &mut paths, graph);
+    let edge_ref = DirectedEdge::get_empty_edge(from, from);
+    dfs(&edge_ref, to, &mut visited, &mut current_path, &mut paths, graph);
     paths
 }
 
-fn dfs(edge: RefCell<DirectedEdge>,
+fn dfs(edge: &DirectedEdge,
        end: i32,
        visited: &mut HashSet<i32>,
-       current_path: &mut Vec<RefCell<DirectedEdge>>,
-       paths: &mut HashMap<String, Vec<RefCell<DirectedEdge>>>,
+       current_path: &mut Vec<DirectedEdge>,
+       paths: &mut HashMap<String, Vec<DirectedEdge>>,
        graph: &EdgeWeightedDigraph) {
 
-    let edge_inner = edge.borrow().clone();
-    let to = edge_inner.to();
-    let from = edge_inner.from();
+    let to = edge.to();
 
     visited.insert(to);
-    if to != from {
-        current_path.push(edge);
-    }
+    current_path.push(*edge);
 
     if to == end {
         paths.insert(vec_to_str(current_path), take(current_path));
@@ -85,7 +82,7 @@ fn dfs(edge: RefCell<DirectedEdge>,
         let mut edges = graph.edge_list(to as usize);
         for gr_ref in edges.iter() {
             if !visited.contains(&gr_ref.borrow().to()) {
-                dfs(gr_ref.clone(),
+                dfs(gr_ref.borrow().deref(),
                     end,
                     visited,
                     current_path,
@@ -99,8 +96,8 @@ fn dfs(edge: RefCell<DirectedEdge>,
     visited.remove(&to);
 }
 
-fn vec_to_str(v: &Vec<RefCell<DirectedEdge>>) -> String {
-    v.iter().map(|n| n.borrow().to().to_string())
+fn vec_to_str(v: &Vec<DirectedEdge>) -> String {
+    v.iter().map(|n| n.to().to_string())
         .collect::<Vec<String>>()
         .join("_")
 }
@@ -124,9 +121,9 @@ impl EdgeFlowCommodities {
         self.edge
     }
 
-    /*pub fn get_edge_mut(&mut self) -> RefMut<DirectedEdge> {
-        self.edge.borrow_mut()
-    }*/
+    pub fn get_edge_mut(&mut self) -> &mut DirectedEdge {
+        &mut self.edge
+    }
 
     pub fn update_commodity(&mut self, commodity: &i32, flow: f64){
         let commodity_flow = self.commodities.get(commodity);

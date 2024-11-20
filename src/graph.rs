@@ -165,6 +165,16 @@ impl EdgeWeightedDigraph {
         &bag[v]
     }
 
+    pub fn update_edge(&mut self, v:i32, w:i32, cost:f64) {
+        let bag = self.adj.as_deref_mut().unwrap();
+        let edge = &bag[v as usize].iter_mut()
+            .find(|n| find(v, w, &n.borrow_mut()));
+        match edge {
+            Some(e) => e.borrow_mut().cost = cost,
+            None => {}
+        }
+    }
+
     /*pub fn edge_list_mut(&self, v: usize) -> RefMut<Bag<DirectedEdge>> {
         let adj_ref = self.adj.as_ref().unwrap().borrow_mut();
     }*/
@@ -172,4 +182,11 @@ impl EdgeWeightedDigraph {
     pub fn get_matrix_connectivity(&self) -> &Vec<Vec<f64>> {
          &self.matrix.as_ref().unwrap()
     }
+}
+
+fn find(v: i32, w:i32, e: &RefMut<DirectedEdge>) -> bool {
+    if e.v == v && e.w == w {
+        return true
+    }
+    return false
 }

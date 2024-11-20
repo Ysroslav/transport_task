@@ -87,13 +87,9 @@ fn main() {
         let mut edge_commodity:HashMap<String, EdgeFlowCommodities> = HashMap::new();
         let mut path_commodity = HashMap::new();
         for (key, path_vec) in &paths{
-            for mut edge_ref in path_vec {
-                let mut edge = edge_ref.borrow_mut();
+            for mut edge in path_vec {
                 let to = edge.to();
-                let from = edge.to();
-                let capacity = edge.get_capacity();
-                let cost = count_first_derivative(x_0_p, capacity);
-                edge.update_cost(cost);
+                let from = edge.from();
                 let key_edge = from.to_string() + "_" + &to.to_string();
                 let check = edge_commodity.get_mut(&key_edge);
                 match check {
@@ -111,11 +107,12 @@ fn main() {
             path_commodity.insert(key, x_0_p);
         }
 
-        /*for (_, edge_flows) in edge_commodity.iter_mut() {
+        for (_, edge_flows) in edge_commodity.iter_mut() {
             let mut edge = edge_flows.get_edge_mut();
             let cost = count_first_derivative(x_0_p, edge.get_capacity());
+            graph_adj.update_edge(edge.to(), edge.from(), cost);
             edge.update_cost(cost);
-        }*/
+        }
 
         // старт расчета
         //запуск алгоритма Дейкстры
@@ -183,20 +180,14 @@ fn count_d_kp_edge_2(edge: &EdgeCapacityProduct) -> f64 {
     count_second_derivative(x_0_j, c_j)
 }
 
-fn symmetric_difference<T: Eq + std::hash::Hash>(vec1: Vec<RefCell<T>>, vec2: Vec<RefCell<T>>) -> Vec<T> {
-    let vec1_inner: Vec<T> = vec1.into_iter().map(|v| v.into_inner()).collect();
-    let vec2_inner: Vec<T> = vec2.into_iter().map(|v| v.into_inner()).collect();
-    let combined: HashSet<_> = vec1_inner.into_iter().chain(vec2_inner).collect();
+
+fn symmetric_difference<T: Eq + std::hash::Hash>(vec1: Vec<T>, vec2: Vec<T>) -> Vec<T> {
+    let combined: HashSet<_> = vec1.into_iter().chain(vec2).collect();
     combined.into_iter().collect()
 }
 
-/*fn symmetric_difference<T: Eq + std::hash::Hash>(vec1: Vec<T>, vec2: Vec<T>) -> Vec<T> {
-    let combined: HashSet<_> = vec1.into_iter().chain(vec2).collect();
-    combined.into_iter().collect()
-}*/
-
-fn get_d_k_p (commodity: &i32, path_edges: &Vec<RefCell<DirectedEdge>>, edges: &HashMap<String, EdgeFlowCommodities>) -> f64 {
-    path_edges.iter().map(|e| get_derivative_one_edge(commodity, &e.borrow().clone(), edges)).sum()
+fn get_d_k_p (commodity: &i32, path_edges: &Vec<DirectedEdge>, edges: &HashMap<String, EdgeFlowCommodities>) -> f64 {
+    path_edges.iter().map(|e| get_derivative_one_edge(commodity, e, edges)).sum()
 }
 
 fn get_derivative_one_edge (commodity: &i32, edge: &DirectedEdge, edges: &HashMap<String, EdgeFlowCommodities>) -> f64 {
@@ -228,14 +219,13 @@ fn get_derivative_two_edge (commodity: &i32, edge: &DirectedEdge, edges: &HashMa
 }
 
 fn update_edge_flow (
-    paths: &HashMap<String, Vec<RefCell<DirectedEdge>>>,
+    paths: &HashMap<String, Vec<DirectedEdge>>,
     result: &HashMap<String, f64>,
     commodity: i32) -> HashMap<String, EdgeFlowCommodities> {
     let mut edge_commodity:HashMap<String, EdgeFlowCommodities > = HashMap::new();
     for (key, path_vec) in paths{
-        for mut edge_ref in path_vec {
+        for mut edge in path_vec {
             let flow = result.get(key).expect("Ошибка");
-            let edge = edge_ref.borrow();
             let key_edge = edge.from().to_string() + "_" + &edge.to().to_string();
             let check = edge_commodity.get_mut(&key_edge);
             match check {
@@ -252,12 +242,12 @@ fn update_edge_flow (
         }
     }
 
-    /*for (_, edge_flows) in edge_commodity.iter_mut() {
+    for (_, edge_flows) in edge_commodity.iter_mut() {
         let flow = edge_flows.get_total_flow_by_commodity(&commodity);
         let mut edge = edge_flows.get_edge_mut();
         let capacity = edge.get_capacity();
         let cost = count_first_derivative(flow, capacity);
         edge.update_cost(cost);
-    }*/
+    }
     edge_commodity
 }
