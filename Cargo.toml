@@ -10,3 +10,5 @@ ndarray = "0.15.6"
 nalgebra = "*"
 transpose = "0.2.3"
 matrixmultiply = "0.3.9"
+serde = { version = "1.0", features = ["derive"] }
+serde-xml-rs = "0.6.0"

@@ -4,7 +4,7 @@ pub struct IndexMinPQ {
     n: i32,
     pq: Vec<i32>,
     qp: Vec<i32>,
-    keys: Vec<f32>
+    keys: Vec<f64>
 }
 
 impl IndexMinPQ {
@@ -34,7 +34,7 @@ impl IndexMinPQ {
         self.qp[i] != -1
     }
 
-    pub fn insert(&mut self, i: usize, key: f32) {
+    pub fn insert(&mut self, i: usize, key: f64) {
         if self.contains(i) {
             //todo добавить исключение
         }
@@ -59,11 +59,11 @@ impl IndexMinPQ {
         min
     }
 
-    pub fn change(&mut self, i: usize, key: f32) {
+    pub fn change(&mut self, i: usize, key: f64) {
         Self::change_key(self, i, key);
     }
 
-    fn change_key(&mut self, i: usize, key: f32) {
+    fn change_key(&mut self, i: usize, key: f64) {
         //todo добавить исключение
         if self.contains(i) {
             //todo добавить исключение
@@ -99,7 +99,7 @@ impl IndexMinPQ {
         Self::compare(self.keys[it1 as usize], self.keys[it2 as usize])
     }
 
-    fn compare(a: f32, b: f32) -> bool {
+    fn compare(a: f64, b: f64) -> bool {
         if a > b {
            return  true
         }

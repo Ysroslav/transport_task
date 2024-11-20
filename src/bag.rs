@@ -49,6 +49,10 @@ impl<T> Bag<T> {
     pub fn iter(&self) -> Iter<'_, T> {
         Iter { next: self.first.as_deref() }
     }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut { next: self.first.as_deref_mut() }
+    }
 }
 
 pub struct Iter<'a, T> {
@@ -61,6 +65,20 @@ impl<'a, T> Iterator for Iter<'a, T> {
         self.next.map(|node| {
             self.next = node.next.as_deref();
             &node.item
+        })
+    }
+}
+
+pub struct IterMut<'a, T> {
+    next: Option<&'a mut Node<T>>,
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.take().map(|node| {
+            self.next = node.next.as_deref_mut();
+            &mut node.item
         })
     }
 }

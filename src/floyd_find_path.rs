@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::graph::{DirectedEdge, EdgeWeightedDigraph};
 
 pub struct FloydSP {
-    dist_to: Vec<Vec<f32>>,
+    dist_to: Vec<Vec<f64>>,
     next: Vec<Vec<usize>>
 }
 
@@ -11,7 +11,7 @@ impl FloydSP {
     pub fn floyd(graph: &EdgeWeightedDigraph) -> FloydSP {
         let vertexes = graph.get_v_count() as usize;
         let mut dij = FloydSP {
-            dist_to: vec![vec![0.0f32; vertexes]; vertexes],
+            dist_to: vec![vec![0.0f64; vertexes]; vertexes],
             next: vec![vec![0usize; vertexes]; vertexes]
         };
 
@@ -20,7 +20,7 @@ impl FloydSP {
 
         for i in 0..vertexes {
             for j in 0..vertexes {
-                if matrix[i][j] != 0f32 && i != j {
+                if matrix[i][j] != 0f64 && i != j {
                     dij.next[i][j] = j;
                 }
             }
@@ -41,7 +41,7 @@ impl FloydSP {
         dij
     }
 
-    pub fn dist_to(&self, u : usize, v: usize) -> f32 {
+    pub fn dist_to(&self, u : usize, v: usize) -> f64 {
         self.dist_to[u][v]
     }
 

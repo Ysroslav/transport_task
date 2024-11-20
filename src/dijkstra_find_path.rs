@@ -5,16 +5,16 @@ use crate::graph::DirectedEdge;
 
 pub struct DijkstraSP {
     edge_to: HashMap<i32, DirectedEdge>,
-    dist_to: Vec<f32>,
+    dist_to: Vec<f64>,
     pq: IndexMinPQ
 }
 
 impl DijkstraSP {
 
-    pub fn dijkstra(graph: &EdgeWeightedDigraph, s:i32) -> DijkstraSP {
+    pub fn dijkstra(graph: &mut EdgeWeightedDigraph, s:i32) -> DijkstraSP {
         let mut dij = DijkstraSP {
             edge_to: HashMap::new(),
-            dist_to: vec![f32::INFINITY; graph.get_v_count() as usize],
+            dist_to: vec![f64::INFINITY; graph.get_v_count() as usize],
             pq: IndexMinPQ::get_index_from_size(graph.get_v_count())
         };
         dij.dist_to[s as usize] = 0.0;
@@ -28,10 +28,11 @@ impl DijkstraSP {
     }
 
     fn relax(dij: &mut DijkstraSP, graph: &EdgeWeightedDigraph, v: usize){
-        for gr in graph.edge_list(v).iter() {
+        for gr_ref in graph.edge_list(v).iter() {
+            let gr = gr_ref.borrow();
             let w = gr.to() as usize;
-            if dij.dist_to[w] > dij.dist_to[v] + gr.get_weight() {
-                dij.dist_to[w] = dij.dist_to[v] + gr.get_weight();
+            if dij.dist_to[w] > dij.dist_to[v] + gr.get_cost() {
+                dij.dist_to[w] = dij.dist_to[v] + gr.get_cost();
                 dij.edge_to.insert(w as i32, *gr);
                 if dij.pq.contains(w) {
                     dij.pq.change(w, dij.dist_to[w]);
@@ -42,12 +43,12 @@ impl DijkstraSP {
         }
     }
 
-    pub fn dist_to(&self, v: usize) -> f32 {
+    pub fn dist_to(&self, v: usize) -> f64 {
         self.dist_to[v]
     }
 
     pub fn has_path_to(&self, v: usize) -> bool {
-        self.dist_to[v] > 0.0 && self.dist_to[v] < f32::INFINITY
+        self.dist_to[v] >= 0.0 && self.dist_to[v] < f64::INFINITY // предусмотреть что self.dist_to[v] равен 0
     }
 
     pub fn path_to(&self, v: usize) -> Option<Vec<DirectedEdge>> {
@@ -79,7 +80,7 @@ pub struct DijkstraAllPairsSP {
 
 impl DijkstraAllPairsSP {
 
-    pub fn get_all_pairs(graph: &EdgeWeightedDigraph) -> Self {
+    pub fn get_all_pairs(graph: &mut EdgeWeightedDigraph) -> Self {
         let mut dij = DijkstraAllPairsSP {
             all: vec![]
         };
