@@ -56,8 +56,8 @@ impl DijkstraSP {
         }
         let mut result: Vec<DirectedEdge> = vec![];
         let mut i = v as i32;
-        let mut e = self.edge_to.get(&i);
-        /*while e.is_none() {
+        /*let mut e = self.edge_to.get(&i);
+        while e.is_none() {
             result.push(*e.unwrap());
             i = dgraph.from();
         }*/

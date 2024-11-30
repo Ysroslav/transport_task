@@ -3,6 +3,7 @@ use std::collections::{HashSet, HashMap};
 use std::hash::{Hash, Hasher};
 use std::mem::take;
 use std::ops::Deref;
+use crate::delay_func_count::{count_first_derivative, count_second_derivative};
 
 use crate::graph::{DirectedEdge, EdgeWeightedDigraph};
 
@@ -98,11 +99,38 @@ fn dfs(
     visited.remove(&to);
 }
 
+pub fn vec_edge_to_str(edges: &Vec<DirectedEdge>) -> String{
+    let mut result = String::new();
+    result = edges[0].to().to_string();
+    for i in 1..edges.len() {
+        result = edges[i].to().to_string() + "_" + &result;
+    }
+    result = edges[edges.len() - 1].from().to_string() + "_" + &result;
+    result
+}
+
 fn vec_to_str(v: &Vec<DirectedEdge>) -> String {
     v.iter()
         .map(|n| n.to().to_string())
         .collect::<Vec<String>>()
         .join("_")
+}
+
+pub fn symmetric_difference<T: Eq + std::hash::Hash>(vec1: Vec<T>, vec2: Vec<T>) -> Vec<T> {
+    let combined: HashSet<_> = vec1.into_iter().chain(vec2).collect();
+    combined.into_iter().collect()
+}
+
+pub fn count_d_kp_edge_1(edge: &EdgeCapacityProduct) -> f64 {
+    let x_0_j = edge.get_products().values().sum();
+    let c_j = edge.get_capacity();
+    count_first_derivative(x_0_j, c_j)
+}
+
+pub fn count_d_kp_edge_2(edge: &EdgeCapacityProduct) -> f64 {
+    let x_0_j = edge.get_products().values().sum();
+    let c_j = edge.get_capacity();
+    count_second_derivative(x_0_j, c_j)
 }
 
 #[derive(Debug)]
