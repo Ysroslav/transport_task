@@ -1,9 +1,6 @@
 use std::cell::{RefCell, RefMut};
 use std::collections::{HashSet, HashMap};
 use std::hash::{Hash, Hasher};
-use std::mem::take;
-use std::ops::Deref;
-use crate::delay_func_count::{count_first_derivative, count_second_derivative};
 
 use crate::graph::{DirectedEdge, EdgeWeightedDigraph};
 
@@ -23,12 +20,6 @@ impl EdgeCapacityProduct {
 
     pub fn update_value(&self, key: i32, value: f64) {
         self.products.borrow_mut().insert(key, value);
-    }
-
-    pub fn get_products_by_commodity(&self, k: &i32) -> f32 {
-        0f32
-        //todo переделать после распределения продуктов
-        //self.products.get(k).expect("")
     }
 
     pub fn get_capacity(&self) -> f64 {
@@ -121,27 +112,16 @@ pub fn symmetric_difference<T: Eq + std::hash::Hash>(vec1: Vec<T>, vec2: Vec<T>)
     combined.into_iter().collect()
 }
 
-pub fn count_d_kp_edge_1(edge: &EdgeCapacityProduct) -> f64 {
-    let x_0_j = edge.get_products().values().sum();
-    let c_j = edge.get_capacity();
-    count_first_derivative(x_0_j, c_j)
-}
-
-pub fn count_d_kp_edge_2(edge: &EdgeCapacityProduct) -> f64 {
-    let x_0_j = edge.get_products().values().sum();
-    let c_j = edge.get_capacity();
-    count_second_derivative(x_0_j, c_j)
-}
 
 #[derive(Debug)]
 pub struct EdgeFlowCommodities {
     edge: DirectedEdge,
-    commodities: HashMap<i32, f64>
+    commodities: HashMap<i32, (f64, f64)>
 }
 
 impl EdgeFlowCommodities {
 
-    pub fn new(edge: DirectedEdge, commodities: HashMap<i32, f64>) -> EdgeFlowCommodities {
+    pub fn new(edge: DirectedEdge, commodities: HashMap<i32, (f64,f64)>) -> EdgeFlowCommodities {
         EdgeFlowCommodities {
             edge,
             commodities
@@ -156,15 +136,28 @@ impl EdgeFlowCommodities {
         &mut self.edge
     }
 
-    pub fn update_commodity(&mut self, commodity: &i32, flow: f64){
-        let commodity_flow = self.commodities.get(commodity);
-        match commodity_flow {
-            Some(x) => {
-                let f = x + flow;
-                self.commodities.insert(*commodity, f);
-            },
+    pub fn update_commodity_flow_x(&mut self, commodity: &i32, flow: f64){
+        let check = self.commodities.get(commodity);
+        match check {
+            Some(mut x) => {
+                let x_new = (flow, x.1);
+                self.commodities.insert(*commodity, x_new);
+            }
             None => {
-                panic!("Продукт не найден")
+                self.commodities.insert(*commodity, (flow, 0f64));
+            }
+        }
+    }
+
+    pub fn update_commodity_flow_y(&mut self, commodity: &i32, flow: f64){
+        let check = self.commodities.get(commodity);
+        match check {
+            Some(mut x) => {
+                let x_new = (x.0, flow);
+                self.commodities.insert(*commodity, x_new);
+            }
+            None => {
+                self.commodities.insert(*commodity, (0f64, flow));
             }
         }
     }
@@ -173,16 +166,20 @@ impl EdgeFlowCommodities {
         let commodity_flow = self.commodities.get(commodity);
         match commodity_flow {
             Some(x) => {
-                *x
+                (*x).0
             },
             None => {
-                panic!("Продукт не найден")
+                0f64
             }
         }
     }
 
-    pub fn get_total_flow(&self) -> f64 {
-        self.commodities.values().sum()
+    pub fn get_total_flow_x(&self) -> f64 {
+        self.commodities.values().map(|pair| pair.0).sum()
+    }
+
+    pub fn get_total_flow_y(&self) -> f64 {
+        self.commodities.values().map(|pair| pair.1).sum()
     }
 
 }
